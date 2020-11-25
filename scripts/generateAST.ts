@@ -6,6 +6,10 @@ const { writeFile } = promises;
 const args = process.argv;
 const outpurDir = args[2];
 
+function defineImports(): string {
+  return `import { Token } from '../Token';`;
+}
+
 function defineVisitor(types: string[]): string {
   const visitorMethodsContent = types
     .map(type => {
@@ -14,63 +18,66 @@ function defineVisitor(types: string[]): string {
     })
     .join('\n');
 
-  const importContent = types
-    .map(type => {
-      const name = type.split('|')[0].trim();
-      return `import { ${name} } from './${name}';`;
-    })
-    .join('\n');
-
-  return `${importContent}
-
-  export interface Visitor<Type> {
+  return `export interface Visitor<Type> {
     ${visitorMethodsContent}
   }`;
 }
 
+function defineExpression(): string {
+  return `export abstract class Expression {
+    public abstract accept<Type>(visitor: Visitor<Type>): Type;
+  }`;
+}
+
 async function defineAST(dir: string, types: string[]) {
-  const visitor = defineVisitor(types);
-  const visitorPath = resolve(dir, 'IVisitor.ts');
+  const interfaceVisitorContent = defineVisitor(types);
+  const importContnet = defineImports();
+  const expressionContent = defineExpression();
 
-  await writeFile(visitorPath, visitor, { encoding: 'utf8' });
+  const path = resolve(dir, 'ast.ts');
 
-  types.forEach(async type => {
-    const fileName = type.split('|')[0].trim();
-    const fields = type.split('|')[1].trim();
+  const astNodesContent = types
+    .map(type => {
+      const className = type.split('|')[0].trim();
+      const fieldsList = type.split('|')[1].trim().split(', ');
 
-    const path = resolve(dir, `${fileName}.ts`);
+      const initContent = fieldsList.map(field => `public ${field}`).join('\n');
+      const constructorContent = fieldsList
+        .map(field => {
+          const varName = field.split(':')[0].trim();
+          return `this.${varName} = ${varName};`;
+        })
+        .join('\n');
 
-    const fieldSets = fields.split(', ');
-    const fieldSetsContent = fieldSets
-      .map(field => {
-        const name = field.split(':')[0].trim();
-        return `this.${name} = ${name};`;
-      })
-      .join('\n');
+      return `export class ${className} extends Expression {
+      ${initContent}
 
-    const fieldsInitContent = fieldSets
-      .map(field => `public ${field};`)
-      .join('\n');
-
-    const content = `import { Expression } from './Expression';
-    import { Token } from '../Token';
-    import { Visitor } from './IVisitor';
-
-    export class ${fileName} extends Expression {
-      ${fieldsInitContent}
-
-      public constructor(${fields}) {
+      public constructor(${fieldsList.join(', ')}) {
         super();
-        ${fieldSetsContent}
+        ${constructorContent}
       }
 
       public accept<Type>(visitor: Visitor<Type>): Type {
-        return visitor.visit${fileName}Expression(this);
+        return visitor.visit${className}Expression(this);
       }
     }`;
+    })
+    .join('\n\n');
 
-    await writeFile(path, content, { encoding: 'utf-8' });
-  });
+  const content = `
+/* eslint-disable max-classes-per-file */
+/* eslint-disable @typescript-eslint/no-namespace */
+${importContnet}
+
+export namespace AST {
+  ${interfaceVisitorContent}
+
+  ${expressionContent}
+
+  ${astNodesContent}
+}`;
+
+  await writeFile(path, content, { encoding: 'utf-8' });
 }
 
 defineAST(outpurDir, [
