@@ -1,7 +1,5 @@
-import { TokenType } from './TokenType';
-import { Token } from './Token';
-import LoxEvents from './emitter/Lox';
-import { keywords } from './contants/ReservedKeywords';
+import { Token, TokenType, token } from './Token';
+import { keywords } from './contants';
 
 export class Scanner {
   private source: string;
@@ -21,7 +19,9 @@ export class Scanner {
       this.scanToken();
     }
 
-    this.tokens.push(new Token(TokenType.EOF, '', null, this.line));
+    this.tokens.push(
+      token(TokenType.EOF, '', null, { line: this.line, column: 0 }),
+    );
     return this.tokens;
   }
 
@@ -36,7 +36,9 @@ export class Scanner {
 
   private addToken(type: TokenType, literal: unknown = null): void {
     const text = this.source.substring(this.start, this.current);
-    this.tokens.push(new Token(type, text, literal, this.line));
+    this.tokens.push(
+      token(type, text, literal, { line: this.line, column: 0 }),
+    );
   }
 
   private match(expected: string): boolean {
@@ -60,7 +62,7 @@ export class Scanner {
     }
 
     if (this.isAtEnd()) {
-      LoxEvents.emit('error', 'Unterminated string.');
+      // LoxEvents.emit('error', 'Unterminated string.');
       return;
     }
 
@@ -180,7 +182,7 @@ export class Scanner {
       default:
         if (this.isDigit(c)) this.number();
         else if (this.isAlpha(c)) this.identifier();
-        else LoxEvents.emit('error', `Unexpected character.`);
+        // else LoxEvents.emit('error', `Unexpected character.`);
         break;
     }
   }

@@ -1,4 +1,4 @@
-import { TokenType } from '../TokenType';
+import { TokenType } from '../Token';
 
 export const keywords: Map<string, TokenType> = new Map<string, TokenType>([
   ['and', TokenType.AND],
