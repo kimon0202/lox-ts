@@ -1,11 +1,12 @@
-import { AST } from './ast';
+import { AST } from '../ast';
 
 export class AstPrinter implements AST.Visitor<string> {
-  public print(expression: AST.Expression | null): string {
-    console.log('Printing AST...');
+  public print(expression: AST.Expression): string {
+    const str = expression.accept(this);
+    console.log(str);
+    console.log('');
 
-    if (expression === null) throw new Error('Impossible to print a null AST.');
-    return expression.accept(this);
+    return str;
   }
 
   public visitBinaryExpression(expression: AST.Binary): string {

@@ -1,7 +1,8 @@
 /* eslint-disable import/no-cycle */
-import { AstPrinter } from './ast/printer';
-import { Parser } from './Parser';
-import { Scanner } from './Scanner';
+import { AST } from './ast/ast';
+import { AstPrinter } from './ast/printers/printer';
+import { Parser } from './analysis/Parser';
+import { Scanner } from './analysis/Scanner';
 import { Token, TokenType } from './Token';
 
 export class LoxInstance {
@@ -21,13 +22,12 @@ export class LoxInstance {
 
   public run(source: string): void {
     this._hadError = false;
+
     const scanner = new Scanner(source);
     const tokens = scanner.scanTokens();
 
     const parser = new Parser(tokens);
-    const ast = parser.parse();
-
-    const printer = new AstPrinter();
+    const ast = parser.parse() || new AST.Literal(undefined);
 
     if (this._hadError) {
       console.log(JSON.stringify(ast, null, 2));
@@ -35,6 +35,7 @@ export class LoxInstance {
       return;
     }
 
+    const printer = new AstPrinter();
     printer.print(ast);
   }
 }

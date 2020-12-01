@@ -1,5 +1,5 @@
-import { Token, TokenType, token } from './Token';
-import { keywords } from './contants';
+import { Token, TokenType, token } from '../Token';
+import { keywords } from '../contants';
 
 export class Scanner {
   private source: string;

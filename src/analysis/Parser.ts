@@ -1,8 +1,8 @@
 /* eslint-disable import/no-cycle */
-import { AST } from './ast/ast';
-import { Token, TokenType } from './Token';
-import { ParseError } from './errors/ParseError';
-import Lox from './Lox';
+import { AST } from '../ast/ast';
+import { Token, TokenType } from '../Token';
+import { ParseError } from '../errors/ParseError';
+import Lox from '../Lox';
 
 export class Parser {
   private readonly _tokens: Token[];
