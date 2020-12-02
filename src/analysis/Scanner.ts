@@ -1,5 +1,7 @@
+/* eslint-disable import/no-cycle */
 import { Token, TokenType, token } from '../Token';
 import { keywords } from '../contants';
+import Lox from '../Lox';
 
 export class Scanner {
   private source: string;
@@ -63,6 +65,7 @@ export class Scanner {
 
     if (this.isAtEnd()) {
       // LoxEvents.emit('error', 'Unterminated string.');
+      Lox.scannerError(this.line, 'Untermiated String.');
       return;
     }
 
@@ -183,6 +186,7 @@ export class Scanner {
         if (this.isDigit(c)) this.number();
         else if (this.isAlpha(c)) this.identifier();
         // else LoxEvents.emit('error', `Unexpected character.`);
+        else Lox.scannerError(this.line, 'Unexpected character.');
         break;
     }
   }

@@ -15,8 +15,12 @@ export class LoxInstance {
     else this.report(token.position.line, `at ${token.lexeme}`, message);
   }
 
-  private report(line: number, where: string, message: string): void {
-    console.log(`[line ${line}] Error ${where}: ${message}`);
+  public scannerError(line: number, message: string): void {
+    this.report(line, '', message);
+  }
+
+  public report(line: number, where: string, message: string): void {
+    console.error(`[line ${line}] Error ${where}: ${message}`);
     this._hadError = true;
   }
 
