@@ -4,9 +4,13 @@ import { AstPrinter } from './ast/printers/printer';
 import { Parser } from './analysis/Parser';
 import { Scanner } from './analysis/Scanner';
 import { Token, TokenType } from './Token';
+import { RuntimeError } from './errors/RuntimeError';
+import { Interpreter } from './Interpreter';
 
 export class LoxInstance {
   private _hadError = false;
+  private _hadRuntimeError = false;
+  private _interpreter = new Interpreter();
 
   // eslint-disable-next-line no-shadow
   public error(token: Token, message: string): void {
@@ -15,17 +19,23 @@ export class LoxInstance {
     else this.report(token.position.line, `at ${token.lexeme}`, message);
   }
 
+  public runtimeError(err: RuntimeError): void {
+    this.report(err.token.position.line, err.token.lexeme, err.message);
+    this._hadRuntimeError = true;
+  }
+
   public scannerError(line: number, message: string): void {
     this.report(line, '', message);
   }
 
   public report(line: number, where: string, message: string): void {
-    console.error(`[line ${line}] Error ${where}: ${message}`);
+    console.error(`[line ${line}] Error ${where}: ${message}\n`);
     this._hadError = true;
   }
 
   public run(source: string): void {
     this._hadError = false;
+    this._hadRuntimeError = false;
 
     const scanner = new Scanner(source);
     const tokens = scanner.scanTokens();
@@ -33,14 +43,14 @@ export class LoxInstance {
     const parser = new Parser(tokens);
     const ast = parser.parse() || new AST.Literal(undefined);
 
-    if (this._hadError) {
-      console.log(JSON.stringify(ast, null, 2));
-      console.log(`Had Error: ${this._hadError}`);
+    // TODO: change this to reflect correct exit codes
+    if (this._hadError || this._hadRuntimeError) {
       return;
     }
 
-    const printer = new AstPrinter();
-    printer.print(ast);
+    // const printer = new AstPrinter();
+    // printer.print(ast);
+    this._interpreter.interpret(ast);
   }
 }
 
