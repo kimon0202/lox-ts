@@ -1,10 +1,11 @@
-import { AST } from './ast/ast';
+/* eslint-disable import/no-cycle */
+import { ExpressionAST } from './ast/ast';
 import { RuntimeError } from './errors/RuntimeError';
 import Lox from './Lox';
 import { Token, TokenType } from './Token';
 
-export class Interpreter implements AST.Visitor<unknown> {
-  public interpret(expression: AST.Expression): void {
+export class Interpreter implements ExpressionAST.Visitor<unknown> {
+  public interpret(expression: ExpressionAST.Expression): void {
     try {
       const value = this.evaluate(expression);
       console.log(this.stringify(value));
@@ -20,7 +21,7 @@ export class Interpreter implements AST.Visitor<unknown> {
     return String(value);
   }
 
-  private evaluate(expression: AST.Expression): unknown {
+  private evaluate(expression: ExpressionAST.Expression): unknown {
     return expression.accept(this);
   }
 
@@ -52,7 +53,7 @@ export class Interpreter implements AST.Visitor<unknown> {
     throw new RuntimeError(operator, 'Operands must be numbers.');
   }
 
-  public visitBinaryExpression(expression: AST.Binary): unknown {
+  public visitBinaryExpression(expression: ExpressionAST.Binary): unknown {
     const left = this.evaluate(expression.left);
     const right = this.evaluate(expression.right);
 
@@ -101,15 +102,15 @@ export class Interpreter implements AST.Visitor<unknown> {
     return null;
   }
 
-  public visitGroupingExpression(expression: AST.Grouping): unknown {
+  public visitGroupingExpression(expression: ExpressionAST.Grouping): unknown {
     return this.evaluate(expression.expression);
   }
 
-  public visitLiteralExpression(expression: AST.Literal): unknown {
+  public visitLiteralExpression(expression: ExpressionAST.Literal): unknown {
     return expression.value;
   }
 
-  public visitUnaryExpression(expression: AST.Unary): unknown {
+  public visitUnaryExpression(expression: ExpressionAST.Unary): unknown {
     const right = this.evaluate(expression.right);
 
     switch (expression.operator.type) {

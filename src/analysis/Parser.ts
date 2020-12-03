@@ -1,5 +1,5 @@
 /* eslint-disable import/no-cycle */
-import { AST } from '../ast/ast';
+import { ExpressionAST } from '../ast/ast';
 import { Token, TokenType } from '../Token';
 import { ParseError } from '../errors/ParseError';
 import Lox from '../Lox';
@@ -12,7 +12,7 @@ export class Parser {
     this._tokens = tokens;
   }
 
-  public parse(): AST.Expression | null {
+  public parse(): ExpressionAST.Expression | null {
     try {
       return this.expression();
     } catch (err) {
@@ -73,24 +73,24 @@ export class Parser {
     return false;
   }
 
-  private expression(): AST.Expression {
+  private expression(): ExpressionAST.Expression {
     return this.equality();
   }
 
-  private equality(): AST.Expression {
+  private equality(): ExpressionAST.Expression {
     let expression = this.comparison();
 
     while (this.match(TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL)) {
       const operator = this.previous();
       const right = this.comparison();
 
-      expression = new AST.Binary(expression, operator, right);
+      expression = new ExpressionAST.Binary(expression, operator, right);
     }
 
     return expression;
   }
 
-  private comparison(): AST.Expression {
+  private comparison(): ExpressionAST.Expression {
     let expression = this.term();
 
     while (
@@ -104,63 +104,63 @@ export class Parser {
       const operator = this.previous();
       const right = this.term();
 
-      expression = new AST.Binary(expression, operator, right);
+      expression = new ExpressionAST.Binary(expression, operator, right);
     }
 
     return expression;
   }
 
-  private term(): AST.Expression {
+  private term(): ExpressionAST.Expression {
     let expression = this.factor();
 
     while (this.match(TokenType.MINUS, TokenType.PLUS)) {
       const operator = this.previous();
       const right = this.factor();
 
-      expression = new AST.Binary(expression, operator, right);
+      expression = new ExpressionAST.Binary(expression, operator, right);
     }
 
     return expression;
   }
 
-  private factor(): AST.Expression {
+  private factor(): ExpressionAST.Expression {
     let expression = this.unary();
 
     while (this.match(TokenType.SLASH, TokenType.STAR)) {
       const operator = this.previous();
       const right = this.unary();
 
-      expression = new AST.Binary(expression, operator, right);
+      expression = new ExpressionAST.Binary(expression, operator, right);
     }
 
     return expression;
   }
 
-  private unary(): AST.Expression {
+  private unary(): ExpressionAST.Expression {
     if (this.match(TokenType.BANG, TokenType.MINUS)) {
       const operator = this.previous();
       const right = this.unary();
 
-      return new AST.Unary(operator, right);
+      return new ExpressionAST.Unary(operator, right);
     }
 
     return this.primary();
   }
 
-  private primary(): AST.Expression {
-    if (this.match(TokenType.FALSE)) return new AST.Literal(false);
-    if (this.match(TokenType.TRUE)) return new AST.Literal(true);
-    if (this.match(TokenType.NIL)) return new AST.Literal(null);
+  private primary(): ExpressionAST.Expression {
+    if (this.match(TokenType.FALSE)) return new ExpressionAST.Literal(false);
+    if (this.match(TokenType.TRUE)) return new ExpressionAST.Literal(true);
+    if (this.match(TokenType.NIL)) return new ExpressionAST.Literal(null);
 
     if (this.match(TokenType.NUMBER, TokenType.STRING)) {
-      return new AST.Literal(this.previous().literal);
+      return new ExpressionAST.Literal(this.previous().literal);
     }
 
     if (this.match(TokenType.LEFT_PAREN)) {
       const expression = this.expression();
       this.consume(TokenType.RIGHT_PAREN, 'Expected ")" after expression.');
 
-      return new AST.Grouping(expression);
+      return new ExpressionAST.Grouping(expression);
     }
 
     throw this.error(this.peek(), 'Expected expression.');

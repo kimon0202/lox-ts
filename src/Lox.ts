@@ -1,6 +1,6 @@
 /* eslint-disable import/no-cycle */
-import { AST } from './ast/ast';
-import { AstPrinter } from './ast/printers/printer';
+import { ExpressionAST } from './ast/ast';
+// import { AstPrinter } from './ast/printers/printer';
 import { Parser } from './analysis/Parser';
 import { Scanner } from './analysis/Scanner';
 import { Token, TokenType } from './Token';
@@ -41,7 +41,7 @@ export class LoxInstance {
     const tokens = scanner.scanTokens();
 
     const parser = new Parser(tokens);
-    const ast = parser.parse() || new AST.Literal(undefined);
+    const ast = parser.parse() || new ExpressionAST.Literal(undefined);
 
     // TODO: change this to reflect correct exit codes
     if (this._hadError || this._hadRuntimeError) {

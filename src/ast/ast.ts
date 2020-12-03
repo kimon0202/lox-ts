@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-namespace */
 import { Token } from '../Token';
 
-export namespace AST {
+export namespace ExpressionAST {
   export interface Visitor<Type> {
     visitBinaryExpression(expression: Binary): Type;
     visitGroupingExpression(expression: Grouping): Type;

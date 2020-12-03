@@ -3,18 +3,11 @@ import { resolve } from 'path';
 
 const { writeFile } = promises;
 
-const args = process.argv;
-const outpurDir = args[2];
-
-function defineImports(): string {
-  return `import { Token } from '../Token';`;
-}
-
-function defineVisitor(types: string[]): string {
+function defineVisitor(baseName: string, types: string[]): string {
   const visitorMethodsContent = types
     .map(type => {
       const typeName = type.split('|')[0].trim();
-      return `visit${typeName}Expression(expression: ${typeName}): Type;`;
+      return `visit${typeName}${baseName}(${baseName.toLowerCase()}: ${typeName}): Type;`;
     })
     .join('\n');
 
@@ -23,18 +16,20 @@ function defineVisitor(types: string[]): string {
   }`;
 }
 
-function defineExpression(): string {
-  return `export abstract class Expression {
+function defineBase(name: string): string {
+  return `export abstract class ${name} {
     public abstract accept<Type>(visitor: Visitor<Type>): Type;
   }`;
 }
 
-async function defineAST(dir: string, types: string[]) {
-  const interfaceVisitorContent = defineVisitor(types);
-  const importContnet = defineImports();
-  const expressionContent = defineExpression();
-
-  const path = resolve(dir, 'ast.ts');
+export async function defineAST(
+  dir: string,
+  baseName: string,
+  types: string[],
+  imports: string,
+): Promise<void> {
+  const interfaceVisitorContent = defineVisitor(baseName, types);
+  const baseContent = defineBase(baseName);
 
   const astNodesContent = types
     .map(type => {
@@ -49,7 +44,7 @@ async function defineAST(dir: string, types: string[]) {
         })
         .join('\n');
 
-      return `export class ${className} extends Expression {
+      return `export class ${className} extends ${baseName} {
       ${initContent}
 
       public constructor(${fieldsList.join(', ')}) {
@@ -58,7 +53,7 @@ async function defineAST(dir: string, types: string[]) {
       }
 
       public accept<Type>(visitor: Visitor<Type>): Type {
-        return visitor.visit${className}Expression(this);
+        return visitor.visit${className}${baseName}(this);
       }
     }`;
     })
@@ -67,22 +62,15 @@ async function defineAST(dir: string, types: string[]) {
   const content = `
 /* eslint-disable max-classes-per-file */
 /* eslint-disable @typescript-eslint/no-namespace */
-${importContnet}
+${imports}
 
-export namespace AST {
+export namespace ${baseName}AST {
   ${interfaceVisitorContent}
 
-  ${expressionContent}
+  ${baseContent}
 
   ${astNodesContent}
 }`;
 
-  await writeFile(path, content, { encoding: 'utf-8' });
+  await writeFile(dir, content, { encoding: 'utf-8' });
 }
-
-defineAST(outpurDir, [
-  'Binary | left: Expression, operator: Token, right: Expression',
-  'Grouping | expression: Expression',
-  'Literal | value: unknown',
-  'Unary | operator: Token, right: Expression',
-]);

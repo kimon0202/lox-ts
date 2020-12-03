@@ -1,7 +1,7 @@
-import { AST } from '../ast';
+import { ExpressionAST } from '../ast';
 
-export class AstPrinter implements AST.Visitor<string> {
-  public print(expression: AST.Expression): string {
+export class AstPrinter implements ExpressionAST.Visitor<string> {
+  public print(expression: ExpressionAST.Expression): string {
     const str = expression.accept(this);
     console.log(str);
     console.log('');
@@ -9,7 +9,7 @@ export class AstPrinter implements AST.Visitor<string> {
     return str;
   }
 
-  public visitBinaryExpression(expression: AST.Binary): string {
+  public visitBinaryExpression(expression: ExpressionAST.Binary): string {
     return this.parenthesize(
       expression.operator.lexeme,
       expression.left,
@@ -17,19 +17,22 @@ export class AstPrinter implements AST.Visitor<string> {
     );
   }
 
-  public visitGroupingExpression(expression: AST.Grouping): string {
+  public visitGroupingExpression(expression: ExpressionAST.Grouping): string {
     return this.parenthesize('group', expression.expression);
   }
 
-  public visitLiteralExpression(expression: AST.Literal): string {
+  public visitLiteralExpression(expression: ExpressionAST.Literal): string {
     return String(expression.value) || 'nil';
   }
 
-  public visitUnaryExpression(expression: AST.Unary): string {
+  public visitUnaryExpression(expression: ExpressionAST.Unary): string {
     return this.parenthesize(expression.operator.lexeme, expression.right);
   }
 
-  private parenthesize(name: string, ...expressions: AST.Expression[]): string {
+  private parenthesize(
+    name: string,
+    ...expressions: ExpressionAST.Expression[]
+  ): string {
     return `(${name} ${expressions
       .map(expression => expression.accept(this))
       .join(' ')})`;

@@ -5,7 +5,8 @@
   "author": "Gustavo Teodoro Bauke",
   "license": "MIT",
   "scripts": {
-    "make:ast": "yarn ts-node ./scripts/generateAST.ts C:\\dev\\templates\\typescript-eslint-prettier\\src\\ast",
+    "make:expressions": "yarn ts-node ./scripts/expressions.ts C:\\dev\\templates\\typescript-eslint-prettier\\src\\ast",
+    "make:statements": "yarn ts-node ./scripts/statements.ts C:\\dev\\templates\\typescript-eslint-prettier\\src\\ast",
     "start": "yarn ts-node ./src/index.ts"
   },
   "devDependencies": {
