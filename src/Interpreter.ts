@@ -1,18 +1,24 @@
 /* eslint-disable import/no-cycle */
 import { ExpressionAST } from './ast/ast';
+import { StatementAST } from './ast/statements';
 import { RuntimeError } from './errors/RuntimeError';
 import Lox from './Lox';
 import { Token, TokenType } from './Token';
 
-export class Interpreter implements ExpressionAST.Visitor<unknown> {
-  public interpret(expression: ExpressionAST.Expression): void {
+export class Interpreter
+  implements ExpressionAST.Visitor<unknown>, StatementAST.Visitor<void> {
+  public interpret(statements: StatementAST.Statement[]): void {
     try {
-      const value = this.evaluate(expression);
-      console.log(this.stringify(value));
-      console.log('');
+      for (let i = 0; i < statements.length; i++) {
+        this.execute(statements[i]);
+      }
     } catch (err) {
       if (err instanceof RuntimeError) Lox.runtimeError(err);
     }
+  }
+
+  private execute(statement: StatementAST.Statement): void {
+    statement.accept(this);
   }
 
   // TODO: change the stringification method to reflect all possible options
@@ -98,8 +104,6 @@ export class Interpreter implements ExpressionAST.Visitor<unknown> {
       default:
         return null;
     }
-
-    return null;
   }
 
   public visitGroupingExpression(expression: ExpressionAST.Grouping): unknown {
@@ -121,5 +125,14 @@ export class Interpreter implements ExpressionAST.Visitor<unknown> {
       default:
         return null;
     }
+  }
+
+  public visitExpressionStatement(statement: StatementAST.Expression): void {
+    this.evaluate(statement.expression);
+  }
+
+  public visitPrintStatement(statement: StatementAST.Print): void {
+    const value = this.evaluate(statement.expression);
+    console.log(this.stringify(value));
   }
 }

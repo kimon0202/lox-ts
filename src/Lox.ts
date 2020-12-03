@@ -1,6 +1,4 @@
 /* eslint-disable import/no-cycle */
-import { ExpressionAST } from './ast/ast';
-// import { AstPrinter } from './ast/printers/printer';
 import { Parser } from './analysis/Parser';
 import { Scanner } from './analysis/Scanner';
 import { Token, TokenType } from './Token';
@@ -10,7 +8,6 @@ import { Interpreter } from './Interpreter';
 export class LoxInstance {
   private _hadError = false;
   private _hadRuntimeError = false;
-  private _interpreter = new Interpreter();
 
   // eslint-disable-next-line no-shadow
   public error(token: Token, message: string): void {
@@ -41,7 +38,7 @@ export class LoxInstance {
     const tokens = scanner.scanTokens();
 
     const parser = new Parser(tokens);
-    const ast = parser.parse() || new ExpressionAST.Literal(undefined);
+    const statements = parser.parse();
 
     // TODO: change this to reflect correct exit codes
     if (this._hadError || this._hadRuntimeError) {
@@ -50,7 +47,8 @@ export class LoxInstance {
 
     // const printer = new AstPrinter();
     // printer.print(ast);
-    this._interpreter.interpret(ast);
+    const interpreter = new Interpreter();
+    interpreter.interpret(statements);
   }
 }
 

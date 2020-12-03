@@ -3,6 +3,7 @@ import { ExpressionAST } from '../ast/ast';
 import { Token, TokenType } from '../Token';
 import { ParseError } from '../errors/ParseError';
 import Lox from '../Lox';
+import { StatementAST } from '../ast/statements';
 
 export class Parser {
   private readonly _tokens: Token[];
@@ -12,14 +13,14 @@ export class Parser {
     this._tokens = tokens;
   }
 
-  public parse(): ExpressionAST.Expression | null {
-    try {
-      return this.expression();
-    } catch (err) {
-      if (err instanceof ParseError) return null;
+  public parse(): StatementAST.Statement[] {
+    const statements: StatementAST.Statement[] = [];
+
+    while (!this.isAtEnd()) {
+      statements.push(this.statement());
     }
 
-    return null;
+    return statements;
   }
 
   private peek(offset = 0): Token {
@@ -75,6 +76,26 @@ export class Parser {
 
   private expression(): ExpressionAST.Expression {
     return this.equality();
+  }
+
+  private statement(): StatementAST.Statement {
+    if (this.match(TokenType.PRINT)) return this.printStatement();
+
+    return this.expressionStatement();
+  }
+
+  private expressionStatement(): StatementAST.Statement {
+    const expression = this.expression();
+    this.consume(TokenType.SEMICOLON, 'Expected ";" after expression.');
+
+    return new StatementAST.Expression(expression);
+  }
+
+  private printStatement(): StatementAST.Statement {
+    const value = this.expression();
+    this.consume(TokenType.SEMICOLON, 'Expected ";" after value.');
+
+    return new StatementAST.Print(value);
   }
 
   private equality(): ExpressionAST.Expression {
