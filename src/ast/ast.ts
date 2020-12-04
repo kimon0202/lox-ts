@@ -8,6 +8,7 @@ export namespace ExpressionAST {
     visitBinaryExpression(expression: Binary): Type;
     visitGroupingExpression(expression: Grouping): Type;
     visitLiteralExpression(expression: Literal): Type;
+    visitLogicalExpression(expression: Logical): Type;
     visitUnaryExpression(expression: Unary): Type;
     visitVariableExpression(expression: Variable): Type;
   }
@@ -71,6 +72,23 @@ export namespace ExpressionAST {
 
     public accept<Type>(visitor: Visitor<Type>): Type {
       return visitor.visitLiteralExpression(this);
+    }
+  }
+
+  export class Logical extends Expression {
+    public left: Expression;
+    public operator: Token;
+    public right: Expression;
+
+    public constructor(left: Expression, operator: Token, right: Expression) {
+      super();
+      this.left = left;
+      this.operator = operator;
+      this.right = right;
+    }
+
+    public accept<Type>(visitor: Visitor<Type>): Type {
+      return visitor.visitLogicalExpression(this);
     }
   }
 

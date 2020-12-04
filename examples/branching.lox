@@ -1,0 +1,4 @@
+print nil or "My name is Gustavo";
+
+if (true and true) print(true);
+if (!false) print(false);

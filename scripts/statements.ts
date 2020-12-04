@@ -10,6 +10,7 @@ defineAST(
   [
     'Block | statements: Statement[]',
     'Expression | expression: ExpressionAST.Expression',
+    'If | condition: ExpressionAST.Expression, thenBranch: Statement, elseBranch: Statement',
     'Print | expression: ExpressionAST.Expression',
     'Var | name: Token, initializer: ExpressionAST.Expression',
   ],

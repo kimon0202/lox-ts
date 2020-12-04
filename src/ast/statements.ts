@@ -7,6 +7,7 @@ export namespace StatementAST {
   export interface Visitor<Type> {
     visitBlockStatement(statement: Block): Type;
     visitExpressionStatement(statement: Expression): Type;
+    visitIfStatement(statement: If): Type;
     visitPrintStatement(statement: Print): Type;
     visitVarStatement(statement: Var): Type;
   }
@@ -38,6 +39,27 @@ export namespace StatementAST {
 
     public accept<Type>(visitor: Visitor<Type>): Type {
       return visitor.visitExpressionStatement(this);
+    }
+  }
+
+  export class If extends Statement {
+    public condition: ExpressionAST.Expression;
+    public thenBranch: Statement;
+    public elseBranch: Statement | null;
+
+    public constructor(
+      condition: ExpressionAST.Expression,
+      thenBranch: Statement,
+      elseBranch: Statement | null,
+    ) {
+      super();
+      this.condition = condition;
+      this.thenBranch = thenBranch;
+      this.elseBranch = elseBranch;
+    }
+
+    public accept<Type>(visitor: Visitor<Type>): Type {
+      return visitor.visitIfStatement(this);
     }
   }
 

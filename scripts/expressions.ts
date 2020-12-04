@@ -12,6 +12,7 @@ defineAST(
     'Binary | left: Expression, operator: Token, right: Expression',
     'Grouping | expression: Expression',
     'Literal | value: unknown',
+    'Logical | left: Expression, operator: Token, right: Expression',
     'Unary | operator: Token, right: Expression',
     'Variable | name: Token',
   ],

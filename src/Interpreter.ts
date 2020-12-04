@@ -133,6 +133,19 @@ export class Interpreter
     return expression.value;
   }
 
+  public visitLogicalExpression(expression: ExpressionAST.Logical): unknown {
+    const left = this.evaluate(expression.left);
+
+    if (expression.operator.type === TokenType.OR) {
+      if (this.isTruthy(left)) return left;
+    } else {
+      // eslint-disable-next-line no-lonely-if
+      if (!this.isTruthy(left)) return left;
+    }
+
+    return this.evaluate(expression.right);
+  }
+
   public visitUnaryExpression(expression: ExpressionAST.Unary): unknown {
     const right = this.evaluate(expression.right);
 
@@ -175,5 +188,11 @@ export class Interpreter
 
   public visitBlockStatement(statement: StatementAST.Block): void {
     this.executeBlock(statement.statements, new Environment(this.environment));
+  }
+
+  public visitIfStatement(statement: StatementAST.If): void {
+    if (this.isTruthy(this.evaluate(statement.condition)))
+      this.execute(statement.thenBranch);
+    else if (statement.elseBranch) this.execute(statement.elseBranch);
   }
 }

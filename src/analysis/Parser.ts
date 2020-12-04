@@ -80,7 +80,7 @@ export class Parser {
   }
 
   private assignment(): ExpressionAST.Expression {
-    const expression = this.equality();
+    const expression = this.or();
 
     if (this.match(TokenType.EQUAL)) {
       const equals = this.previous();
@@ -97,12 +97,51 @@ export class Parser {
     return expression;
   }
 
+  private or(): ExpressionAST.Expression {
+    let expression = this.and();
+
+    while (this.match(TokenType.OR)) {
+      const operator = this.previous();
+      const right = this.and();
+
+      expression = new ExpressionAST.Logical(expression, operator, right);
+    }
+
+    return expression;
+  }
+
+  public and(): ExpressionAST.Expression {
+    let expression = this.equality();
+
+    while (this.match(TokenType.AND)) {
+      const operator = this.previous();
+      const right = this.equality();
+
+      expression = new ExpressionAST.Logical(expression, operator, right);
+    }
+
+    return expression;
+  }
+
   private statement(): StatementAST.Statement {
     if (this.match(TokenType.PRINT)) return this.printStatement();
     if (this.match(TokenType.LEFT_BRACE))
       return new StatementAST.Block(this.block());
+    if (this.match(TokenType.IF)) return this.ifStatement();
 
     return this.expressionStatement();
+  }
+
+  private ifStatement(): StatementAST.Statement {
+    this.consume(TokenType.LEFT_PAREN, 'Expected "(" after "if".');
+    const condition = this.expression();
+    this.consume(TokenType.RIGHT_PAREN, 'Expected ")" after if condition.');
+
+    const thenBranch = this.statement();
+    let elseBranch = null;
+
+    if (this.match(TokenType.ELSE)) elseBranch = this.statement();
+    return new StatementAST.If(condition, thenBranch, elseBranch);
   }
 
   private block(): StatementAST.Statement[] {
