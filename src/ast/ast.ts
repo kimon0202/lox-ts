@@ -4,14 +4,31 @@ import { Token } from '../Token';
 
 export namespace ExpressionAST {
   export interface Visitor<Type> {
+    visitAssignExpression(expression: Assign): Type;
     visitBinaryExpression(expression: Binary): Type;
     visitGroupingExpression(expression: Grouping): Type;
     visitLiteralExpression(expression: Literal): Type;
     visitUnaryExpression(expression: Unary): Type;
+    visitVariableExpression(expression: Variable): Type;
   }
 
   export abstract class Expression {
     public abstract accept<Type>(visitor: Visitor<Type>): Type;
+  }
+
+  export class Assign extends Expression {
+    public name: Token;
+    public value: Expression;
+
+    public constructor(name: Token, value: Expression) {
+      super();
+      this.name = name;
+      this.value = value;
+    }
+
+    public accept<Type>(visitor: Visitor<Type>): Type {
+      return visitor.visitAssignExpression(this);
+    }
   }
 
   export class Binary extends Expression {
@@ -69,6 +86,19 @@ export namespace ExpressionAST {
 
     public accept<Type>(visitor: Visitor<Type>): Type {
       return visitor.visitUnaryExpression(this);
+    }
+  }
+
+  export class Variable extends Expression {
+    public name: Token;
+
+    public constructor(name: Token) {
+      super();
+      this.name = name;
+    }
+
+    public accept<Type>(visitor: Visitor<Type>): Type {
+      return visitor.visitVariableExpression(this);
     }
   }
 }

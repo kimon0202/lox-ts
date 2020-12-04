@@ -1,9 +1,13 @@
 /* eslint-disable import/no-cycle */
+import { promises } from 'fs';
+
 import { Parser } from './analysis/Parser';
 import { Scanner } from './analysis/Scanner';
 import { Token, TokenType } from './Token';
 import { RuntimeError } from './errors/RuntimeError';
 import { Interpreter } from './Interpreter';
+
+const { readFile } = promises;
 
 export class LoxInstance {
   private _hadError = false;
@@ -28,6 +32,11 @@ export class LoxInstance {
   public report(line: number, where: string, message: string): void {
     console.error(`[line ${line}] Error ${where}: ${message}\n`);
     this._hadError = true;
+  }
+
+  public async runFile(path: string): Promise<void> {
+    const source = await readFile(path, { encoding: 'utf8' });
+    this.run(source);
   }
 
   public run(source: string): void {

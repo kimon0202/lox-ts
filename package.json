@@ -7,6 +7,7 @@
   "scripts": {
     "make:expressions": "yarn ts-node ./scripts/expressions.ts C:\\dev\\templates\\typescript-eslint-prettier\\src\\ast",
     "make:statements": "yarn ts-node ./scripts/statements.ts C:\\dev\\templates\\typescript-eslint-prettier\\src\\ast",
+    "make:ast": "yarn make:expressions && yarn make:statements",
     "start": "yarn ts-node ./src/index.ts"
   },
   "devDependencies": {

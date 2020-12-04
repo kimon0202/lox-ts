@@ -17,7 +17,8 @@ export class Parser {
     const statements: StatementAST.Statement[] = [];
 
     while (!this.isAtEnd()) {
-      statements.push(this.statement());
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      statements.push(this.declaration()!);
     }
 
     return statements;
@@ -75,13 +76,68 @@ export class Parser {
   }
 
   private expression(): ExpressionAST.Expression {
-    return this.equality();
+    return this.assignment();
+  }
+
+  private assignment(): ExpressionAST.Expression {
+    const expression = this.equality();
+
+    if (this.match(TokenType.EQUAL)) {
+      const equals = this.previous();
+      const value = this.assignment();
+
+      if (expression instanceof ExpressionAST.Variable) {
+        const { name } = expression as ExpressionAST.Variable;
+        return new ExpressionAST.Assign(name, value);
+      }
+
+      this.error(equals, `Invalid assignment target.`);
+    }
+
+    return expression;
   }
 
   private statement(): StatementAST.Statement {
     if (this.match(TokenType.PRINT)) return this.printStatement();
+    if (this.match(TokenType.LEFT_BRACE))
+      return new StatementAST.Block(this.block());
 
     return this.expressionStatement();
+  }
+
+  private block(): StatementAST.Statement[] {
+    const statements: StatementAST.Statement[] = [];
+
+    while (!this.check(TokenType.RIGHT_BRACE) && !this.isAtEnd())
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      statements.push(this.declaration()!);
+
+    this.consume(TokenType.RIGHT_BRACE, 'Exprected "}" after block.');
+    return statements;
+  }
+
+  private declaration(): StatementAST.Statement | null {
+    try {
+      if (this.match(TokenType.VAR)) return this.varDeclaration();
+
+      return this.statement();
+    } catch (err) {
+      this.synchronize();
+      return null;
+    }
+  }
+
+  private varDeclaration(): StatementAST.Statement {
+    const name = this.consume(TokenType.IDENTIFIER, 'Expected variable name.');
+    let initializer: ExpressionAST.Expression = new ExpressionAST.Literal(null);
+
+    if (this.match(TokenType.EQUAL)) initializer = this.expression();
+
+    this.consume(
+      TokenType.SEMICOLON,
+      'Expected ";" after variable declaration.',
+    );
+    return new StatementAST.Var(name, initializer);
   }
 
   private expressionStatement(): StatementAST.Statement {
@@ -176,6 +232,9 @@ export class Parser {
     if (this.match(TokenType.NUMBER, TokenType.STRING)) {
       return new ExpressionAST.Literal(this.previous().literal);
     }
+
+    if (this.match(TokenType.IDENTIFIER))
+      return new ExpressionAST.Variable(this.previous());
 
     if (this.match(TokenType.LEFT_PAREN)) {
       const expression = this.expression();

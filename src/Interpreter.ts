@@ -4,9 +4,12 @@ import { StatementAST } from './ast/statements';
 import { RuntimeError } from './errors/RuntimeError';
 import Lox from './Lox';
 import { Token, TokenType } from './Token';
+import { Environment } from './Environment';
 
 export class Interpreter
   implements ExpressionAST.Visitor<unknown>, StatementAST.Visitor<void> {
+  private environment = new Environment();
+
   public interpret(statements: StatementAST.Statement[]): void {
     try {
       for (let i = 0; i < statements.length; i++) {
@@ -19,6 +22,22 @@ export class Interpreter
 
   private execute(statement: StatementAST.Statement): void {
     statement.accept(this);
+  }
+
+  private executeBlock(
+    statements: StatementAST.Statement[],
+    environment: Environment,
+  ): void {
+    const previous = this.environment;
+    try {
+      this.environment = environment;
+
+      for (let i = 0; i < statements.length; i++) {
+        this.execute(statements[i]);
+      }
+    } finally {
+      this.environment = previous;
+    }
   }
 
   // TODO: change the stringification method to reflect all possible options
@@ -134,5 +153,27 @@ export class Interpreter
   public visitPrintStatement(statement: StatementAST.Print): void {
     const value = this.evaluate(statement.expression);
     console.log(this.stringify(value));
+  }
+
+  public visitVariableExpression(expression: ExpressionAST.Variable): unknown {
+    return this.environment.get(expression.name);
+  }
+
+  public visitVarStatement(statement: StatementAST.Var): void {
+    let value = null;
+    if (statement.initializer) value = this.evaluate(statement.initializer);
+
+    this.environment.define(statement.name.lexeme, value);
+  }
+
+  public visitAssignExpression(expression: ExpressionAST.Assign): unknown {
+    const value = this.evaluate(expression.value);
+    this.environment.assign(expression.name, value);
+
+    return value;
+  }
+
+  public visitBlockStatement(statement: StatementAST.Block): void {
+    this.executeBlock(statement.statements, new Environment(this.environment));
   }
 }
