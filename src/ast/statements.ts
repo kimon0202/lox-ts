@@ -10,6 +10,7 @@ export namespace StatementAST {
     visitIfStatement(statement: If): Type;
     visitPrintStatement(statement: Print): Type;
     visitVarStatement(statement: Var): Type;
+    visitWhileStatement(statement: While): Type;
   }
 
   export abstract class Statement {
@@ -88,6 +89,21 @@ export namespace StatementAST {
 
     public accept<Type>(visitor: Visitor<Type>): Type {
       return visitor.visitVarStatement(this);
+    }
+  }
+
+  export class While extends Statement {
+    public condition: ExpressionAST.Expression;
+    public body: Statement;
+
+    public constructor(condition: ExpressionAST.Expression, body: Statement) {
+      super();
+      this.condition = condition;
+      this.body = body;
+    }
+
+    public accept<Type>(visitor: Visitor<Type>): Type {
+      return visitor.visitWhileStatement(this);
     }
   }
 }

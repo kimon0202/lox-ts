@@ -8,11 +8,12 @@ defineAST(
   path.resolve(outputDir, 'statements.ts'),
   'Statement',
   [
-    'Block | statements: Statement[]',
-    'Expression | expression: ExpressionAST.Expression',
-    'If | condition: ExpressionAST.Expression, thenBranch: Statement, elseBranch: Statement',
-    'Print | expression: ExpressionAST.Expression',
-    'Var | name: Token, initializer: ExpressionAST.Expression',
+    'Block ^ statements: Statement[]',
+    'Expression ^ expression: ExpressionAST.Expression',
+    'If ^ condition: ExpressionAST.Expression, thenBranch: Statement, elseBranch: Statement | null',
+    'Print ^ expression: ExpressionAST.Expression',
+    'Var ^ name: Token, initializer: ExpressionAST.Expression',
+    'While ^ condition: ExpressionAST.Expression, body: Statement'
   ],
   `import { ExpressionAST } from './ast';
   import { Token } from '../Token';`,

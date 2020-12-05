@@ -195,4 +195,10 @@ export class Interpreter
       this.execute(statement.thenBranch);
     else if (statement.elseBranch) this.execute(statement.elseBranch);
   }
+
+  public visitWhileStatement(statement: StatementAST.While): void {
+    while (this.isTruthy(this.evaluate(statement.condition))) {
+      this.execute(statement.body);
+    }
+  }
 }

@@ -6,7 +6,7 @@ const { writeFile } = promises;
 function defineVisitor(baseName: string, types: string[]): string {
   const visitorMethodsContent = types
     .map(type => {
-      const typeName = type.split('|')[0].trim();
+      const typeName = type.split('^')[0].trim();
       return `visit${typeName}${baseName}(${baseName.toLowerCase()}: ${typeName}): Type;`;
     })
     .join('\n');
@@ -33,8 +33,8 @@ export async function defineAST(
 
   const astNodesContent = types
     .map(type => {
-      const className = type.split('|')[0].trim();
-      const fieldsList = type.split('|')[1].trim().split(', ');
+      const className = type.split('^')[0].trim();
+      const fieldsList = type.split('^')[1].trim().split(', ');
 
       const initContent = fieldsList.map(field => `public ${field}`).join('\n');
       const constructorContent = fieldsList

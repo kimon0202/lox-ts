@@ -125,11 +125,56 @@ export class Parser {
 
   private statement(): StatementAST.Statement {
     if (this.match(TokenType.PRINT)) return this.printStatement();
+    if (this.match(TokenType.WHILE)) return this.whileStatement();
     if (this.match(TokenType.LEFT_BRACE))
       return new StatementAST.Block(this.block());
+    if (this.match(TokenType.FOR)) return this.forStatement();
     if (this.match(TokenType.IF)) return this.ifStatement();
 
     return this.expressionStatement();
+  }
+
+  private whileStatement(): StatementAST.Statement {
+    this.consume(TokenType.LEFT_PAREN, 'Expected "(" after "while".');
+    const condition = this.expression();
+    this.consume(TokenType.RIGHT_PAREN, 'Expected ")" after condition.');
+    const body = this.statement();
+
+    return new StatementAST.While(condition, body);
+  }
+
+  private forStatement(): StatementAST.Statement {
+    this.consume(TokenType.LEFT_PAREN, 'Expected "(" after "for".');
+
+    let initializer: StatementAST.Statement | null;
+    if (this.match(TokenType.SEMICOLON)) initializer = null;
+    else if (this.match(TokenType.VAR)) initializer = this.varDeclaration();
+    else initializer = this.expressionStatement();
+
+    let condition: ExpressionAST.Expression | null = null;
+    if (!this.check(TokenType.SEMICOLON)) condition = this.expression();
+
+    this.consume(TokenType.SEMICOLON, 'Expected ";" after loop condition.');
+
+    let increment: ExpressionAST.Expression | null = null;
+    if (!this.check(TokenType.RIGHT_PAREN)) increment = this.expression();
+
+    this.consume(TokenType.RIGHT_PAREN, 'Expected ")" after for clauses.');
+
+    let body = this.statement();
+
+    if (increment) {
+      body = new StatementAST.Block([
+        body,
+        new StatementAST.Expression(increment),
+      ]);
+    }
+
+    if (!condition) condition = new ExpressionAST.Literal(true);
+    body = new StatementAST.While(condition, body);
+
+    if (initializer) body = new StatementAST.Block([initializer, body]);
+    return body;
   }
 
   private ifStatement(): StatementAST.Statement {
