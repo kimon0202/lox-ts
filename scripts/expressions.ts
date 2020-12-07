@@ -10,6 +10,7 @@ defineAST(
   [
     'Assign ^ name: Token, value: Expression',
     'Binary ^ left: Expression, operator: Token, right: Expression',
+    'Call ^ callee: Expression, paren: Token, args: Expression[]',
     'Grouping ^ expression: Expression',
     'Literal ^ value: unknown',
     'Logical ^ left: Expression, operator: Token, right: Expression',

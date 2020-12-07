@@ -7,8 +7,10 @@ export namespace StatementAST {
   export interface Visitor<Type> {
     visitBlockStatement(statement: Block): Type;
     visitExpressionStatement(statement: Expression): Type;
+    visitLoxFunctionStatement(statement: LoxFunction): Type;
     visitIfStatement(statement: If): Type;
     visitPrintStatement(statement: Print): Type;
+    visitReturnStatement(statement: Return): Type;
     visitVarStatement(statement: Var): Type;
     visitWhileStatement(statement: While): Type;
   }
@@ -43,6 +45,23 @@ export namespace StatementAST {
     }
   }
 
+  export class LoxFunction extends Statement {
+    public name: Token;
+    public params: Token[];
+    public body: Statement[];
+
+    public constructor(name: Token, params: Token[], body: Statement[]) {
+      super();
+      this.name = name;
+      this.params = params;
+      this.body = body;
+    }
+
+    public accept<Type>(visitor: Visitor<Type>): Type {
+      return visitor.visitLoxFunctionStatement(this);
+    }
+  }
+
   export class If extends Statement {
     public condition: ExpressionAST.Expression;
     public thenBranch: Statement;
@@ -74,6 +93,21 @@ export namespace StatementAST {
 
     public accept<Type>(visitor: Visitor<Type>): Type {
       return visitor.visitPrintStatement(this);
+    }
+  }
+
+  export class Return extends Statement {
+    public keyword: Token;
+    public value: ExpressionAST.Expression | null;
+
+    public constructor(keyword: Token, value: ExpressionAST.Expression | null) {
+      super();
+      this.keyword = keyword;
+      this.value = value;
+    }
+
+    public accept<Type>(visitor: Visitor<Type>): Type {
+      return visitor.visitReturnStatement(this);
     }
   }
 

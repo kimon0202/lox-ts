@@ -6,6 +6,7 @@ export namespace ExpressionAST {
   export interface Visitor<Type> {
     visitAssignExpression(expression: Assign): Type;
     visitBinaryExpression(expression: Binary): Type;
+    visitCallExpression(expression: Call): Type;
     visitGroupingExpression(expression: Grouping): Type;
     visitLiteralExpression(expression: Literal): Type;
     visitLogicalExpression(expression: Logical): Type;
@@ -46,6 +47,23 @@ export namespace ExpressionAST {
 
     public accept<Type>(visitor: Visitor<Type>): Type {
       return visitor.visitBinaryExpression(this);
+    }
+  }
+
+  export class Call extends Expression {
+    public callee: Expression;
+    public paren: Token;
+    public args: Expression[];
+
+    public constructor(callee: Expression, paren: Token, args: Expression[]) {
+      super();
+      this.callee = callee;
+      this.paren = paren;
+      this.args = args;
+    }
+
+    public accept<Type>(visitor: Visitor<Type>): Type {
+      return visitor.visitCallExpression(this);
     }
   }
 

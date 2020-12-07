@@ -125,6 +125,7 @@ export class Parser {
 
   private statement(): StatementAST.Statement {
     if (this.match(TokenType.PRINT)) return this.printStatement();
+    if (this.match(TokenType.RETURN)) return this.returnStatement();
     if (this.match(TokenType.WHILE)) return this.whileStatement();
     if (this.match(TokenType.LEFT_BRACE))
       return new StatementAST.Block(this.block());
@@ -132,6 +133,15 @@ export class Parser {
     if (this.match(TokenType.IF)) return this.ifStatement();
 
     return this.expressionStatement();
+  }
+
+  private returnStatement(): StatementAST.Statement {
+    const keyword = this.previous();
+    let value: ExpressionAST.Expression | null = null;
+
+    if (!this.check(TokenType.SEMICOLON)) value = this.expression();
+    this.consume(TokenType.SEMICOLON, 'Expected ";" after return value.');
+    return new StatementAST.Return(keyword, value);
   }
 
   private whileStatement(): StatementAST.Statement {
@@ -202,6 +212,7 @@ export class Parser {
 
   private declaration(): StatementAST.Statement | null {
     try {
+      if (this.match(TokenType.FUN)) return this.function('function');
       if (this.match(TokenType.VAR)) return this.varDeclaration();
 
       return this.statement();
@@ -209,6 +220,31 @@ export class Parser {
       this.synchronize();
       return null;
     }
+  }
+
+  private function(kind: string): StatementAST.LoxFunction {
+    const name = this.consume(TokenType.IDENTIFIER, `Expected ${kind} name.`);
+
+    this.consume(TokenType.LEFT_PAREN, `Expected "(" after ${kind} name.`);
+    const params: Token[] = [];
+
+    if (!this.check(TokenType.RIGHT_PAREN)) {
+      do {
+        if (params.length >= 255) {
+          this.error(this.peek(), "Can't have more than 255 parameters.");
+        }
+
+        params.push(
+          this.consume(TokenType.IDENTIFIER, 'Expected paramer name.'),
+        );
+      } while (this.match(TokenType.COMMA));
+    }
+
+    this.consume(TokenType.RIGHT_PAREN, 'Expected ")" after parameters.');
+    this.consume(TokenType.LEFT_BRACE, `Expected "{" before ${kind} body.`);
+
+    const body = this.block();
+    return new StatementAST.LoxFunction(name, params, body);
   }
 
   private varDeclaration(): StatementAST.Statement {
@@ -305,7 +341,41 @@ export class Parser {
       return new ExpressionAST.Unary(operator, right);
     }
 
-    return this.primary();
+    return this.call();
+  }
+
+  private call(): ExpressionAST.Expression {
+    let expression = this.primary();
+
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      if (this.match(TokenType.LEFT_PAREN))
+        expression = this.finishCall(expression);
+      else break;
+    }
+
+    return expression;
+  }
+
+  private finishCall(
+    callee: ExpressionAST.Expression,
+  ): ExpressionAST.Expression {
+    const args: ExpressionAST.Expression[] = [];
+
+    if (!this.check(TokenType.RIGHT_PAREN)) {
+      do {
+        if (args.length >= 255) {
+          this.error(this.peek(), "Can't have more than 255 arguments.");
+        }
+        args.push(this.expression());
+      } while (this.match(TokenType.COMMA));
+    }
+
+    const paren = this.consume(
+      TokenType.RIGHT_PAREN,
+      'Expected ")" after arguments.',
+    );
+    return new ExpressionAST.Call(callee, paren, args);
   }
 
   private primary(): ExpressionAST.Expression {

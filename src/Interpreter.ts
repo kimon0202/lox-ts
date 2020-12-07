@@ -1,3 +1,4 @@
+/* eslint-disable max-classes-per-file */
 /* eslint-disable import/no-cycle */
 import { ExpressionAST } from './ast/ast';
 import { StatementAST } from './ast/statements';
@@ -5,10 +6,29 @@ import { RuntimeError } from './errors/RuntimeError';
 import Lox from './Lox';
 import { Token, TokenType } from './Token';
 import { Environment } from './Environment';
+import { LoxCallable } from './Lox Runtime/LoxCallable';
+import { LoxFunction } from './Lox Runtime/LoxFunction';
+import { Return } from './Lox Runtime/Return';
 
 export class Interpreter
   implements ExpressionAST.Visitor<unknown>, StatementAST.Visitor<void> {
-  private environment = new Environment();
+  public globals = new Environment();
+  private environment = this.globals;
+
+  public constructor() {
+    this.globals.define(
+      'clock',
+      new (class extends LoxCallable {
+        public get arity(): number {
+          return 0;
+        }
+
+        public call(): unknown {
+          return new Date().getTime() / 1000;
+        }
+      })(),
+    );
+  }
 
   public interpret(statements: StatementAST.Statement[]): void {
     try {
@@ -24,7 +44,7 @@ export class Interpreter
     statement.accept(this);
   }
 
-  private executeBlock(
+  public executeBlock(
     statements: StatementAST.Statement[],
     environment: Environment,
   ): void {
@@ -159,6 +179,28 @@ export class Interpreter
     }
   }
 
+  public visitCallExpression(expression: ExpressionAST.Call): unknown {
+    const callee = this.evaluate(expression.callee);
+    const args = expression.args.map(arg => this.evaluate(arg));
+
+    if (!(callee instanceof LoxCallable)) {
+      throw new RuntimeError(
+        expression.paren,
+        'Only functions and classes are callable.',
+      );
+    }
+
+    const func = callee as LoxCallable;
+    if (args.length !== func.arity) {
+      throw new RuntimeError(
+        expression.paren,
+        `Expected ${func.arity} arguments but got ${args.length}.`,
+      );
+    }
+
+    return func.call(this, args);
+  }
+
   public visitExpressionStatement(statement: StatementAST.Expression): void {
     this.evaluate(statement.expression);
   }
@@ -200,5 +242,17 @@ export class Interpreter
     while (this.isTruthy(this.evaluate(statement.condition))) {
       this.execute(statement.body);
     }
+  }
+
+  public visitLoxFunctionStatement(statement: StatementAST.LoxFunction): void {
+    const func = new LoxFunction(statement, this.environment);
+    this.environment.define(statement.name.lexeme, func);
+  }
+
+  public visitReturnStatement(statement: StatementAST.Return): void {
+    let value = null;
+    if (statement.value !== null) value = this.evaluate(statement.value);
+
+    throw new Return(value);
   }
 }
